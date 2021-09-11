@@ -1,0 +1,16 @@
+{
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "/home/russom/projects/LIBS/javafx-sdk-11.0.2/lib/javafx.base.jar",
+        "/home/russom/projects/LIBS/javafx-sdk-11.0.2/lib/javafx.controls.jar",
+        "/home/russom/projects/LIBS/javafx-sdk-11.0.2/lib/javafx.fxml.jar",
+        "/home/russom/projects/LIBS/javafx-sdk-11.0.2/lib/javafx.graphics.jar",
+        "/home/russom/projects/LIBS/javafx-sdk-11.0.2/lib/javafx.media.jar",
+        "/home/russom/projects/LIBS/javafx-sdk-11.0.2/lib/javafx.swing.jar",
+        "/home/russom/projects/LIBS/javafx-sdk-11.0.2/lib/javafx.web.jar",
+        "/home/russom/projects/LIBS/javafx-sdk-11.0.2/lib/javafx-swt.jar",
+        "/home/russom/Downloads/commons-lang3-3.12.0/commons-lang3-3.12.0.jar",
+        "/home/russom/projects/LIBS/materialfx-11.12.0.jar",
+        "/home/russom/projects/LIBS/sqlite-jdbc-3.36.0.3.jar"
+    ]
+}
