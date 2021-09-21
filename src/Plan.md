@@ -1,7 +1,6 @@
 # Plan :
 ## Current Issue:
-[x] integrate manual button into bag
-
+* [x] make db do refrences and enable refrence keys at start
 ## tasks:
 * [x] add type to sale class and make it appear
 * [x] ability to add sales to bag from diffrent costlists
@@ -54,8 +53,12 @@
 * what should be price limit
 * how to load costlists, by searching names or listing available ones
 * buyers are specified right?
+* law of no null ?
+* should tables be unique
+* can you delete buyers? what will happen to bags with the deleted buyers name
+* what information do you want about buyers
 - - - -
 ## Database design:
 ### notes:
-* 
+* names should be unique
 

@@ -92,6 +92,7 @@ public class CreateCostList extends Application {
         scene.getStylesheets().add(fontSheet);
         window.setScene(scene);
         window.show();
+        System.out.println("asdf");
 
     }
     public HBox getButtonPane() {
