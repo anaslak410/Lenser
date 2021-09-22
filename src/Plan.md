@@ -46,7 +46,7 @@
 
 ### questions:
 * how do you want everything positioned?
-* do you want quantPrice for each sale?
+* do you want quantPrice for each sale? yes
 * whata are the words for this and that in arabic
 * what should default values be
 * clear button to clear name field?
