@@ -23,12 +23,14 @@ public class Sale {
         this.group1 = group1;
         this.group2 = group2;
         this.quantity = quantity;
+        this.name = "";
     }
     public Sale(long price, long quantity, String group1, String group2) {
         this.price = price ;
         this.group1 = group1;
         this.group2 = group2;
         this.quantity = quantity;
+        this.name = "";
     }
     public void changeQuant(long input) {
         if (input > 0)
@@ -123,5 +125,7 @@ public class Sale {
         return "\n*****\nquant: " + quantity + "\n" + lens + "\ngroup: " + getGroupS() + "\nprice: " + price;  
     }
     public static void main(String[] args) {
+        Sale saleObject1 = new Sale(new Lens(3, 5, "blue cut"), 6500, 3, "2", "2");
+        System.out.println(saleObject1);
     }
 }

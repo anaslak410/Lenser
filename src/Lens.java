@@ -105,7 +105,9 @@ public class Lens{
         else
             return false;
     }
-
+    public String getSphereCyl() {
+        return sphere + "/" + cylinder;
+    }
     @Override
     public String toString() {
         return "type: " + type + "\n" + "sphere: " + sphere + "\n" + "cylinder: " + cylinder + "\n" ;

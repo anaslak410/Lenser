@@ -541,24 +541,23 @@ public class Gui extends Application {
         // if new quantity is entered change value of total AND of bags total
         quantity.focusedProperty().addListener(new ChangeListener<Boolean>() {
             @Override
-            quantFieldChanged();
+            public void changed(ObservableValue<? extends Boolean> arg0, Boolean oldPropertyValue,
+                    Boolean newPropertyValue) {
+                if (oldPropertyValue) {
+                    long newQuant = Long.parseLong(quantity.getText());
+                    Sale sale = (Sale) quantity.getParent().getProperties().get(0);
+                    // update bag and sale
+                    bag.changeSaleQuant(sale, newQuant);
+                    sale.changeQuant(newQuant);
+                    // update sale total
+                    updateSaleTotalLabel(sale);
+                    // replace in salePane property
+                    quantity.getParent().getProperties().replace(0, sale);
+                    editTotal(bag.getTotal());
+                } 
+            }
         });
         return quantity;
-    }
-
-    public static void quantFieldChanged(ObservableValue<? extends Boolean> arg0, Boolean oldPropertyValue, Boolean newPropertyValue) {
-        if (oldPropertyValue) {
-            long newQuant = Long.parseLong(quantity.getText());
-            Sale sale = (Sale) quantity.getParent().getProperties().get(0);
-            // update bag and sale
-            bag.changeSaleQuant(sale, newQuant);
-            sale.changeQuant(newQuant);
-            // update sale total
-            updateSaleTotalLabel(sale);
-            // replace in salePane property
-            quantity.getParent().getProperties().replace(0, sale);
-            editTotal(bag.getTotal());
-        }
     }
     public void quantFieldChanged() {
         

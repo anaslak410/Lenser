@@ -1,6 +1,6 @@
 # Plan :
 ## Current Issue:
-* [x] make db do refrences and enable refrence keys at start
+* bag to database
 ## tasks:
 * [x] add type to sale class and make it appear
 * [x] ability to add sales to bag from diffrent costlists

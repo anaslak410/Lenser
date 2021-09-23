@@ -116,15 +116,10 @@ public class Bag {
              "total: " + total + "\n" + date + "\n" + sales.toString() + "\n/////////////////";
     }
     public static void main(String[] args) {
-        ArrayList<Sale> foo = new ArrayList<>();
-        Sale test = new Sale(0, 2, "4", "SPH");
-        foo.add(test);
-        Sale j = foo.get(0);
-        j.changeQuant(6);
-        System.out.println(foo);
-        // Bag bag = new Bag("buyer");
-        // Sale test = new Sale(0, 12, "4", "6");
-        // bag.addSale(test);
+        Bag bag = new Bag("buyer");
+        Sale test = new Sale(0, 12, "4", "6");
+        bag.addSale(test);
+        System.out.println(bag);
         // test.addQuant(2);
         // bag.incSaleQuant(test);
         // System.out.println(bag.getTotal() + "\n");
