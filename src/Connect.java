@@ -49,18 +49,31 @@ public class Connect {
         pstmt.setString(2, date);
         pstmt.executeUpdate();
     }
-    public void insertSale(Connection conn,int bag_id, String name, long quantity, long price, String lens, String groups) throws Exception{
-        
+    public void insertSale(Connection conn,int bag_id, Sale sale) throws Exception{
         // for inserting sales
-        String sql = "INSERT INTO sales(bag_id, name, quantity, price, lens, groups) VALUES(?,?,?,?,?,?)";
-        PreparedStatement pstmt = conn.prepareStatement(sql);
-        pstmt.setInt(1, bag_id);
-        pstmt.setString(2, name);
-        pstmt.setLong(3, quantity);
-        pstmt.setLong(4, price);
-        pstmt.setString(5, lens);
-        pstmt.setString(6, groups);
-        pstmt.executeUpdate();
+
+        // lenses
+        if (sale.hasLens()){
+            String sql = "INSERT INTO sales(bag_id, name, quantity, price, lens, groups) VALUES(?,?,?,?,?,?)";
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, bag_id);
+            pstmt.setString(2, sale.getLens().getType());
+            pstmt.setLong(3, sale.getQuantity());
+            pstmt.setLong(4, sale.getPrice());
+            pstmt.setString(5, sale.getLens().getSphereCyl());
+            pstmt.setString(6, sale.getName());
+            pstmt.executeUpdate();
+        }
+        // custom slaes
+        else{
+            String sql = "INSERT INTO sales(bag_id, name, quantity, price) VALUES(?,?,?,?)";
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, bag_id);
+            pstmt.setString(2, sale.getName());
+            pstmt.setLong(3, sale.getQuantity());
+            pstmt.setLong(4, sale.getPrice());
+            pstmt.executeUpdate();
+        }
     }
     public void changeBuyerBalance(int newBalance, int rowId) {
         
@@ -124,6 +137,7 @@ public class Connect {
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, rowId);
             stmt.executeUpdate();
+            System.out.println("\n");
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -147,7 +161,7 @@ public class Connect {
         
         String sql = "CREATE TABLE IF NOT EXISTS sales (\n"
                 + "	sale_id integer PRIMARY KEY,\n"
-                + "	bag_id integer UNIQUE NOT NULL,\n"
+                + "	bag_id integer NOT NULL,\n"
                 + "	name text NOT NULL,\n"
                 + "	quantity integer NOT NULL,\n"
                 + "	price integer NOT NULL,\n"
@@ -162,6 +176,41 @@ public class Connect {
         try (Connection conn = connect();
                 Statement stmt = conn.createStatement()) {
             // create a new table
+            stmt.execute(sql);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+    public void createCostListsTable() {
+        
+        String sql = "CREATE TABLE IF NOT EXISTS costLists (\n"
+                + "	list_id integer PRIMARY KEY,\n"
+                + "	name text NOT NULL,\n"
+                + "	date text NOT NULL,\n"
+                + ");";
+        
+        try (Connection conn = connect();
+                Statement stmt = conn.createStatement()) {
+            stmt.execute(sql);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+    public void createCostListCellsTable() {
+        
+        String sql = "CREATE TABLE IF NOT EXISTS costListCells (\n"
+                + "	row_id integer PRIMARY KEY,\n"
+                + "	list_id integer NOT NULL,\n"
+                + "	sell integer NOT NULL,\n"
+                + "	purch integer NOT NULL,\n"
+                + "	FOREIGN KEY (list_id)\n"
+                + "	    REFERENCES CostLists (list_id)\n"
+                + "	    ON DELETE CASCADE\n"
+                + "	    ON UPDATE CASCADE\n"
+                + ");";
+        
+        try (Connection conn = connect();
+                Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -203,24 +252,26 @@ public class Connect {
     }
     public void bagToDB(Bag bag) {
         String beginTrans = "BEGIN TRANSACTION;";
+        String endTrans = "COMMIT;";
         try (Connection conn = this.connect();
             Statement transaction = conn.createStatement()){
             // excute transaction
-            // transaction.execute(beginTrans);
+            transaction.execute(beginTrans);
             // insert bag
             insertBag(conn, getBuyerId(bag.getBuyer()), getDate());
             // insert all sales
-            // for (int i = 0; i < bag.size(); i++) {
-                // Sale sale = bag.getSale(i);
-            // insertSale(conn, lastInsertKey(conn), sale.getName(), sale.getQuantity(),
-            //             sale.getPrice(), sale.getLens().getSphereCyl(), sale.getGroupS());
-            // }
+            final int lastKey = lastInsertKey(conn);
+            for (int i = 0; i < bag.size(); i++) {
+                Sale sale = bag.getSale(i);
+                insertSale(conn, lastKey, sale);
+            }
+            transaction.execute(endTrans);
         } catch (Exception e) {
             System.out.println(e);
         }
     }
     public int lastInsertKey (Connection conn) throws Exception {
-        String sql = "SELECT last_insert_rowid()";
+        String sql = "SELECT last_insert_rowid() FROM bags";
         Statement stmt = conn.createStatement();
         ResultSet result = stmt.executeQuery(sql);
         return result.getInt(1);
@@ -237,6 +288,67 @@ public class Connect {
             return -1;
         }
     }
+    public void queryBag(int id) {
+        String sql = "SELECT bag_id, buyer_id,date FROM bags WHERE bag_id = ?;";
+        try (Connection conn = this.connect();
+                PreparedStatement stmt = conn.prepareStatement(sql)){
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                System.out.println(rs.getString(1) + "\t" + rs.getString(2) + "\t" + rs.getString(3));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+    public void querySale(int id) {
+        String sql = "SELECT * FROM sales WHERE bag_id = ?;";
+        try (Connection conn = this.connect();
+                PreparedStatement stmt = conn.prepareStatement(sql)){
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+            System.out.println("Sales");
+            while (rs.next()) {
+                System.out.println(rs.getString(1) + "\t"
+                                 + rs.getString(2) + "\t"
+                                 + rs.getString(3) + "\t"
+                                 + rs.getString(4) + "\t"
+                                 + rs.getString(5) + "\t"
+                                 + rs.getString(6) + "\t"
+                                 + rs.getString(7));
+                
+            }
+            System.out.println("\n");
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+    public void queryLastBag() {
+       String sql = "SELECT * FROM bags ORDER BY bag_id DESC LIMIT 1;";
+       try (Connection conn = this.connect();
+               Statement stmt = conn.createStatement();
+               ResultSet rs = stmt.executeQuery(sql)) {
+           int lastRecord = rs.getInt(1); 
+           queryBag(lastRecord);
+           querySale(lastRecord);
+
+       } catch (SQLException e) {
+           System.out.println(e.getMessage());
+       }
+   }
+    public String getBuyer(int id) {
+        
+        String sql = "SELECT name FROM buyers WHERE buyer_id = ?;";
+        try (Connection conn = this.connect();
+                PreparedStatement stmt = conn.prepareStatement(sql)){
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+            return rs.getString(1);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return "null";
+        }
+    }
     public static void main(String[] args) {
         Connect te = new Connect();
         // System.out.println(te.lastInsertKey());
@@ -249,28 +361,18 @@ public class Connect {
         // System.out.println(te.getBuyerId("mom"));
         // te.getBuyerId("zal");
         // te.insertSale(2, "bluecut", 3, 3000, "4.25/6.5", "16/20");
-        // te.deleteBag(2);
-        // te.queryBagTable();
-        // te.queryBuyerTable();
-        // te.querySaleTable();
 
 
         ArrayList<Bag> foo = new ArrayList<Bag>();
-        Bag test = new Bag("zal");
+        Bag test = new Bag("anas");
         Sale saleObject1 = new Sale(new Lens(3, 5, "blue cut"), 6500, 3, "2", "2");
-        Sale saleObject2 = new Sale(new Lens(4.5F, 2.25F, "blue cut"), 200, 1, "4", "6");
+        Sale saleObject2 = new Sale(200, 1, "glasses ");
         Sale saleObject3 = new Sale(new Lens(1, 1.75F, "blue cut"), 15250, 33, "10", "6");
         test.addSale(saleObject1);
         test.addSale(saleObject2);
         test.addSale(saleObject3);
-        // System.out.println(test);
-        // Sale saleObject2 = new Sale(price, quantity, group1, group2);
-        // Sale saleObject3 = new Sale(price, quantity, name);
-        te.bagToDB(test);
-        te.queryBagTable();
-        // te.queryBuyerTable();
-        te.querySaleTable();
-
+        // te.bagToDB(test);
+        // te.queryLastBag();
         Bag test2 = new Bag("eric");
         Bag test3 = new Bag("john");
         foo.add(test);

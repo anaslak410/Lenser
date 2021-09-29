@@ -3,13 +3,15 @@ import java.util.Arrays;
 
 // when a cell is added to the bag it must come with col and row names
 public class CostList {
-    private int[][] list;
+    private int[][] purchPrices;
+    private int[][] sellPrices;
     private int[] statCol;
     private String[] statRow;
     private String name;
 
     public CostList(String name) {
-        list = new int[10][4];
+        sellPrices = new int[10][4];
+        purchPrices = new int[10][4];
         statCol = new int[10];
         for (int i = 0 , j = 2; i < 10; i++ , j = j +2) {
             statCol[i]= j;
@@ -21,8 +23,11 @@ public class CostList {
         this.name = name;
     }
 
-    public void editCell(int row, int col, int value) {
-        list[row][col] = value;
+    public void editSell(int row, int col, int value) {
+        sellPrices[row][col] = value;
+    }
+    public void editPurch(int row, int col, int value) {
+        sellPrices[row][col] = value;
     }
     public void intArrToCostList(int[] inputArr) {
         if (inputArr.length != 40 ){
@@ -30,19 +35,21 @@ public class CostList {
             return;
         }
         for (int row = 0, col = 0, i = 0; row < 10; col++,i++) {
-            this.editCell(row, col, inputArr[i]);
+            this.editSell(row, col, inputArr[i]);
             if (col == 3){
                 row ++;
                 col = -1;
             }
         }
     }
-    public int getCell(int row, int col) {
-        return list[row][col];
+    public int getSell(int row, int col) {
+        return sellPrices[row][col];
     }
-
-    public int[] getRow(int row) {
-        return list[row];
+    public int getPurch(int row, int col) {
+        return sellPrices[row][col];
+    }
+    public int[] getRowSell(int row) {
+        return sellPrices[row];
     }
     public String getCellString(int row , int col) {
         return "";
@@ -65,15 +72,13 @@ public class CostList {
         System.out.println("\n" + name);
         System.out.println("\n" + Arrays.toString(statRow));
         for (int i = 0; i < 10; i++) {
-            System.out.println(statCol[i]+ " " + Arrays.toString(list[i]));
+            System.out.println(statCol[i]+ " " + Arrays.toString(sellPrices[i]));
         }
         return "";
     }
 
     public static void main(String[] args) {
         CostList test = new CostList("blue cut");
-        test.editCell(7, 1,200);
-        test.editCell(3, 3,200);
         System.out.println(test);
     }
 }

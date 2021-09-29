@@ -117,8 +117,6 @@ public class Bag {
     }
     public static void main(String[] args) {
         Bag bag = new Bag("buyer");
-        Sale test = new Sale(0, 12, "4", "6");
-        bag.addSale(test);
         System.out.println(bag);
         // test.addQuant(2);
         // bag.incSaleQuant(test);

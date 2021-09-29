@@ -5,32 +5,29 @@ public class Sale {
     private Lens lens;
     private long price;
     private long quantity;
-    private String group1;
-    private String group2;
     private String name;
+    private boolean custom;
 
     // for custom sales
     public Sale(long price, long quantity , String name) {
         this.price = price ;
         this.quantity = quantity;
-        group1 = "";
-        group2 = "";
         this.name = name;
+        this.custom = true;
     }
     public Sale(Lens lens, long price, long quantity, String group1, String group2) {
         this.lens = lens;
         this.price = price ;
-        this.group1 = group1;
-        this.group2 = group2;
+        this.name = group1 + "//" + group2;
         this.quantity = quantity;
-        this.name = "";
+        this.custom = false;
     }
-    public Sale(long price, long quantity, String group1, String group2) {
+    public Sale(long price, long quantity, String group1, String group2 , String name) {
+        this.lens = new Lens(0, 0, name);
         this.price = price ;
-        this.group1 = group1;
-        this.group2 = group2;
         this.quantity = quantity;
-        this.name = "";
+        this.name = group1 + "//" + group2;
+        this.custom = false;
     }
     public void changeQuant(long input) {
         if (input > 0)
@@ -62,18 +59,17 @@ public class Sale {
         if (getClass() != input.getClass())
             return false;
         Sale compare = (Sale) input;
-        // if compared has no lenses then dont compare lenses
-        if ((compare.hasLens() || this.hasLens()) && !compare.getLens().equals(this.getLens()))
-            return false;
-        // if compared has group then compare group
-        if ((compare.hasGroup() || this.hasGroup())){
-            if(!compare.getGroupS().equals(this.getGroupS()))
-            return false;
+        // if compared is custom then compare names only
+        if (compare.isCustom() || this.isCustom()) {
+            if (!compare.getName().equals(this.getName()))
+                return false;
         }
-        // else compare names since its custom
-        else {  
-            if(!compare.getName().equals(this.getName()))
-            return false;
+        // else compare lens names AND group names 
+        else {
+            if(!compare.getLens().getType().equals(this.getLens().getType()))
+                return false;
+            if (!compare.getName().equals(this.getName()))
+                return false;
         }
         if (compare.getPrice() != this.getPrice())
             return false;
@@ -82,50 +78,34 @@ public class Sale {
     public Lens getLens() {
         return lens;
     }
-    public boolean hasGroup() {
-        if (group1.isEmpty() && group2.isEmpty())
-            return false;
-        return true;
-    }
     public long getPrice() {
         return price ;
-    }
-    public boolean hasName() {
-        return name.isEmpty();
     }
     public long getPriceQuant() {
         return price * quantity ;
     }
-
+    public boolean isCustom() {
+        return custom;
+    }
     public long getQuantity() {
         return quantity;
     }
     public String getName() {
         return name;
     }
-
-    public String getGroupOne() {
-        return group1;
-    }
-
-    public String getGroupS() {
-        return group1 + "/" + group2;
-    }
     public boolean hasLens() {
         return lens != null;
     }
-    public String getGroupTwo() {
-        return group2;
-    }
     @Override
     public String toString() {
-        if (!hasName()){
+        if (!isCustom()){
             return "\n*****\nquant: " + quantity + "\nName: " + name + "\nprice: " + price;
         }
-        return "\n*****\nquant: " + quantity + "\n" + lens + "\ngroup: " + getGroupS() + "\nprice: " + price;  
+        return "\n*****\nquant: " + quantity + "\n" + lens + "\ngroup: " + getName() + "\nprice: " + price;  
     }
     public static void main(String[] args) {
-        Sale saleObject1 = new Sale(new Lens(3, 5, "blue cut"), 6500, 3, "2", "2");
-        System.out.println(saleObject1);
+        Sale test = new Sale(new Lens(0, 0, "type"),1,1,"5","2");
+        Sale test2 = new Sale(new Lens(0, 0, "type"),1,9,"5","2");
+        System.out.println(test.equals(test2));
     }
 }

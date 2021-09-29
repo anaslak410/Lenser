@@ -1,6 +1,8 @@
 # Plan :
 ## Current Issue:
 * bag to database
+* use ids to refer to nodes and not nums
+* have every db return specific query
 ## tasks:
 * [x] add type to sale class and make it appear
 * [x] ability to add sales to bag from diffrent costlists
@@ -16,6 +18,7 @@
 * [x] must be able to remove sales individually
 * [ ] mechanism to not allow text
 * [ ] fix scroll issue
+* [ ] name field
 * [ ] make it save fields once one quits
 * [x] update total price when quantity is increased manually
 * [ ] make bag savable with a button 
@@ -25,6 +28,7 @@
 * [ ] ribbon with manual loading
 * [ ] manual loading must go to a seperate screen to see all available costlists may
 * [ ] material design
+* [ ] database constraints 
 - - - -
 ## Version Plan :
 
@@ -52,11 +56,14 @@
 * clear button to clear name field?
 * what should be price limit
 * how to load costlists, by searching names or listing available ones
-* buyers are specified right?
+* buyers are specified right? yes
+* limitations for DB
 * law of no null ?
 * should tables be unique
 * can you delete buyers? what will happen to bags with the deleted buyers name
 * what information do you want about buyers
+* what should button names be
+* should buyer balance change automatically?
 - - - -
 ## Database design:
 ### notes:

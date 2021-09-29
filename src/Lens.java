@@ -57,9 +57,11 @@ public class Lens{
         else
             throw new IllegalArgumentException();
     }
-    public boolean isSphere(float input) {
+    public static boolean isSphere(float input) {
         ArrayList<Float> allowedSphere = new ArrayList<>();
         float sph = 0;
+        // for negative values
+        input = Math.abs(input);
 
         allowedSphere.add(sph);
         for (int i = 0; i < 40;i++) {
@@ -86,7 +88,8 @@ public class Lens{
         else
             return false;
     }
-    public boolean isCyl(float input) {
+    public static boolean isCyl(float input) {
+        input = Math.abs(input);
         ArrayList<Float> allowedCyl = new ArrayList<>();
         float cyl = 0;
         allowedCyl.add(cyl);
@@ -105,6 +108,7 @@ public class Lens{
         else
             return false;
     }
+
     public String getSphereCyl() {
         return sphere + "/" + cylinder;
     }

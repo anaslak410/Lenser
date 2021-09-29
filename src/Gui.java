@@ -27,6 +27,7 @@ import javafx.event.EventType;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -44,6 +45,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Border;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -141,14 +143,14 @@ public class Gui extends Application {
             String first = RandomStringUtils.random(4, true, false);
             String second = RandomStringUtils.random(4, true, false);
             CostList input = new CostList(first + " " + second);
-            input.editCell(4, 1, RandomUtils.nextInt(1, 50) * 100);
-            input.editCell(2, 3, RandomUtils.nextInt(1, 50) * 100);
-            input.editCell(6, 2, RandomUtils.nextInt(1, 50) * 100);
-            input.editCell(2, 2, RandomUtils.nextInt(1, 50) * 100);
-            input.editCell(6, 2, RandomUtils.nextInt(1, 50) * 100);
-            input.editCell(6, 3, RandomUtils.nextInt(1, 50) * 100);
-            input.editCell(1, 2, RandomUtils.nextInt(1, 50) * 100);
-            input.editCell(0, 0, RandomUtils.nextInt(1, 50) * 100);
+            input.editSell(4, 1, RandomUtils.nextInt(1, 50) * 100);
+            input.editSell(2, 3, RandomUtils.nextInt(1, 50) * 100);
+            input.editSell(6, 2, RandomUtils.nextInt(1, 50) * 100);
+            input.editSell(2, 2, RandomUtils.nextInt(1, 50) * 100);
+            input.editSell(6, 2, RandomUtils.nextInt(1, 50) * 100);
+            input.editSell(6, 3, RandomUtils.nextInt(1, 50) * 100);
+            input.editSell(1, 2, RandomUtils.nextInt(1, 50) * 100);
+            input.editSell(0, 0, RandomUtils.nextInt(1, 50) * 100);
 
             list.put(first.stripLeading() + " " + second.stripLeading(), input);
         }
@@ -204,13 +206,54 @@ public class Gui extends Application {
         }
         // add cells
         getCellButton(lensTable);
-        // button to add manual sale with price,quantity and type fields 
-        Button addSaleManual = getManualButton();
 
         lensTable.setPadding(new Insets(10));;
         lensTable.setStyle("-fx-border-color: red;");
-        result.getChildren().addAll(lensTable,addSaleManual);
+        result.getChildren().addAll(lensTable,getButtonPane());
         return result;
+    }
+    public TilePane getButtonPane() {
+        TilePane buttoPane = new TilePane();
+        // button to add manual sale with price,quantity and type fields 
+        Button addSaleManual = getManualButton();
+        // button to submit sale
+        Button submitButton = getSubmitButton();
+        buttoPane.getChildren().addAll(addSaleManual,submitButton,getClearButton());
+        return buttoPane;
+    }
+    public Button getSubmitButton() {
+        Button submit = new Button();
+        submit.setText("Submit");
+        submit.setPrefSize(70, 70);
+        submit.setOnMouseClicked(submitButtonClickEvent());
+        return submit;
+    }
+    public EventHandler<MouseEvent> submitButtonClickEvent() {
+        EventHandler<MouseEvent> event = new EventHandler<MouseEvent>(){
+            @Override
+            public void handle(MouseEvent e) {
+                // submit confimation alert
+                Alert alert = new Alert(AlertType.CONFIRMATION,
+                                         "", ButtonType.YES,
+                                         ButtonType.NO);
+                alert.titleProperty().set("التاكد");
+                alert.headerTextProperty().set("هل انت متاكد؟");
+                alert.showAndWait();
+                // if no then do nothing
+                if (alert.getResult() == ButtonType.NO) {
+                    return;
+                }
+                Connect db = new Connect();
+                db.bagToDB(bag);
+                // set total to zero
+                editTotal(0);
+                // delete all sales
+                bagPane.getChildren() .remove(1, bagPane.getChildren().size());
+                // clear bag
+                bag.clearBag();
+            }
+        };
+        return event;
     }
     public TilePane getCellButton(TilePane lensTable) {
         // map for cell properties: group 1 and 2 and lens name
@@ -230,7 +273,7 @@ public class Gui extends Application {
                 cellPropert.put(3, costlist.getname());
                 button.getProperties().putAll(cellPropert);
                 // price as button text
-                button.setText(costlist.getCell(i, j) + "");
+                button.setText(costlist.getSell(i, j) + "");
                 button.setMinSize(130, 50);
                 lensTable.getChildren().add(button);
 
@@ -243,7 +286,7 @@ public class Gui extends Application {
                             bagPane.getChildren().add(addSale(sale));
                         else
                             incSale(sale);
-                        // System.out.println(bag + "\n");
+                        System.out.println(bag + "\n");
                     }
                 });
             }
@@ -254,6 +297,7 @@ public class Gui extends Application {
         // button to add sales manually without lenses
         Button addSaleManual = new Button();
         addSaleManual.setText("Add sale manually");
+        addSaleManual.setPrefSize(70, 70);
         addSaleManual.setOnMouseClicked(new EventHandler<MouseEvent>(){
             @Override
             public void handle(MouseEvent e) {
@@ -272,7 +316,7 @@ public class Gui extends Application {
         // put it in bag
         bag.addSale(manualSale);
         // put it all in pane
-        result.getChildren().addAll(getListNumLabel(),getQuantField(1),getManualPriceField(),getManualTextField(),removeSaleButton());
+        result.getChildren().addAll(getListNumLabel(),getQuantField(1),getManualPriceField(),getManualTextField(),getSaleTotalPricLabel(manualSale),removeSaleButton());
         return result;
     }
     public TextField getManualTextField() {
@@ -326,13 +370,16 @@ public class Gui extends Application {
                 } catch (Exception z) {
                     quantOld = 0;
                 }
-                if(delta > 1)
+                // if scroll up increase it if not decrease it
+                if(delta > 1){
                     price.setText("" + (quantInc + quantOld));
+                }
                 else if(delta < -1){
                     if (quantOld <= 0)
                         return;
                     price.setText("" + ((quantInc * -1) + quantOld));
                 }
+                updatePriceField(price);
             }
         });
         // if new price is entered change value of total AND of bags total
@@ -341,39 +388,36 @@ public class Gui extends Application {
             public void changed(ObservableValue<? extends Boolean> arg0, Boolean oldPropertyValue,
                     Boolean newPropertyValue) {
                 if (oldPropertyValue) {
-                    long newPrice;
-                    try {
-                        newPrice = Long.parseLong(price.getText());
-                        if (newPrice < 0) {
-                            newPrice = 0;
-                        }
-                    } catch (Exception e) {
-                        newPrice = 0;
-                    }
-                    price.setText(newPrice + "");
-                    Sale sale = (Sale) price.getParent().getProperties().get(0);
-                    bag.changeSalePrice(sale, newPrice);
-                    sale.editprice(newPrice);
-                    price.getParent().getProperties().replace(0, sale);
-                    editTotal(bag.getTotal());
+                    updatePriceField(price);
                 } 
             }
         });
         return price;
     }
-    public VBox getBagPane(Bag input) {
-        VBox result = new VBox();
-        result.setStyle("-fx-border-color: blue;");
-        result.setAlignment(Pos.CENTER);
-
-        // label for total
-        total = new Label();
-        total.setText("Total: 0");
-        total.setFont(new Font (30));
-
+    public void updatePriceField(TextField price) {
+        // trigger to change total and bag when manual price is chaned 
+        long newPrice;
+        // autochange to zero if its not eligible
+        try {
+            newPrice = Long.parseLong(price.getText());
+            if (newPrice < 0) {
+                newPrice = 0;
+            }
+        } catch (Exception e) {
+            newPrice = 0;
+        }
+        price.setText(newPrice + "");
+        Sale sale = (Sale) price.getParent().getProperties().get(0);
+        bag.changeSalePrice(sale, newPrice);
+        sale.editprice(newPrice);
+        price.getParent().getProperties().replace(0, sale);
+        editTotal(bag.getTotal());
+    }
+    public Button getClearButton() {
         // button for clearing bag
         Button clear = new Button();
         clear.setText("Clear Bag");
+        clear.setPrefSize(70, 70);
         clear.setOnMouseClicked(new EventHandler<MouseEvent>(){
             @Override
             public void handle(MouseEvent e) {
@@ -394,16 +438,29 @@ public class Gui extends Application {
                 // clear bag
                 bag.clearBag();
                 // delete all sales
-                result.getChildren().remove(2, result.getChildren().size());
+                bagPane.getChildren().remove(1, bagPane.getChildren().size());
             }
         });
-        result.getChildren().addAll(total,clear);
+        return clear;
+    }
+    public VBox getBagPane(Bag input) {
+        VBox result = new VBox();
+        result.setId("bagPane");
+        result.setStyle("-fx-border-color: blue;");
+        result.setAlignment(Pos.CENTER);
+
+        // label for total
+        total = new Label();
+        total.setText("Total: 0");
+        total.setFont(new Font (30));
+
+        result.getChildren().addAll(total);
         return result;
     }
     public Sale buttToSale(Button button) {
         // create sale object
         Sale sale = new Sale(Long.parseLong(button.getText()), 1L, button.getProperties().get(1) + ""
-        , button.getProperties().get(2) + "");
+        , button.getProperties().get(2) + "", button.getProperties().get(3) + "");
         return sale;
     }
     public void incSale(Sale sale) {
@@ -428,6 +485,11 @@ public class Gui extends Application {
         changedPane.getChildren().set(5, getSaleTotalPricLabel(sale));
         
     }
+    public int getPosChild(Pane pane,String id) {
+        int[] result = pane.getChildren().filtered(e -> e.idProperty().equals(id)).toArray();
+
+        return 3;
+    }
     public void updateQuantField(Sale sale) {
         HBox changedPane = (HBox) bagPane.getChildren().
                             filtered(e -> e.getProperties().containsValue(sale)).get(0);
@@ -441,8 +503,9 @@ public class Gui extends Application {
     public Label getSaleTotalPricLabel(Sale sale) {
         // sale total
         Label saleTotal = new Label(sale.getPriceQuant() + "");
+        saleTotal.setId("saleTotal");
         saleTotal.setFont(new Font(25));
-
+        saleTotal.setId(bag.size() + "");
         return saleTotal;
     }
     public HBox addSale(Sale sale) {
@@ -476,9 +539,9 @@ public class Gui extends Application {
         // group, price , namd and total price ID
         Label gr = new Label();
         gr.setFont(new Font(25));
-        gr.setText("Group: " + sale.getGroupS() +
+        gr.setText("Group: " + sale.getName() +
                     " Price: " + sale.getPrice() +
-                    " type: " + costlist.getname());
+                    " type: " + sale.getLens().getType());
 
         // add them all to box and add the remove button
         salePane.getChildren().addAll(getListNumLabel(),quantity, gr, sphere, cyl, getSaleTotalPricLabel(sale) ,removeSaleButton());
@@ -536,6 +599,7 @@ public class Gui extends Application {
                         return;
                     quantity.setText("" + ((quantInc * -1) + quantOld));
                 }
+                updateQuantField(quantity);
             }
         });
         // if new quantity is entered change value of total AND of bags total
@@ -544,23 +608,23 @@ public class Gui extends Application {
             public void changed(ObservableValue<? extends Boolean> arg0, Boolean oldPropertyValue,
                     Boolean newPropertyValue) {
                 if (oldPropertyValue) {
-                    long newQuant = Long.parseLong(quantity.getText());
-                    Sale sale = (Sale) quantity.getParent().getProperties().get(0);
-                    // update bag and sale
-                    bag.changeSaleQuant(sale, newQuant);
-                    sale.changeQuant(newQuant);
-                    // update sale total
-                    updateSaleTotalLabel(sale);
-                    // replace in salePane property
-                    quantity.getParent().getProperties().replace(0, sale);
-                    editTotal(bag.getTotal());
+                    updateQuantField(quantity);
                 } 
             }
         });
         return quantity;
     }
-    public void quantFieldChanged() {
-        
+    public void updateQuantField(TextField quantity) {
+        long newQuant = Long.parseLong(quantity.getText());
+        Sale sale = (Sale) quantity.getParent().getProperties().get(0);
+        // update bag and sale
+        bag.changeSaleQuant(sale, newQuant);
+        sale.changeQuant(newQuant);
+        // update sale total
+        updateSaleTotalLabel(sale);
+        // replace in salePane property
+        quantity.getParent().getProperties().replace(0, sale);
+        editTotal(bag.getTotal());
     }
     public long getTotalLong() {
         return Long.parseLong(total.getText().substring(7));
@@ -584,15 +648,23 @@ public class Gui extends Application {
                     String input = cyl.getText();
                     try {
                         float field = Float.parseFloat(input);
-                        if (field > 6)
+                        if (field > 6){
                             cyl.setText("6");
-                        else if (field < -6)
+						}
+                        else if (field < -6){
                             cyl.setText("-6");
+						}
+            			else if (!Lens.isCyl(field)){
+                    		cyl.setText("0");
+						}
+						else {
+							updateCylOfSale(cyl.getParent(),field); 
+						}
                     } catch (Exception e) {
-                        cyl.setText("0");
+                    	cyl.setText("0");
                     }
-                    
-                }             }
+                }
+            }
 
         });
         cyl.setOnScroll(new EventHandler<ScrollEvent>() {
@@ -601,25 +673,46 @@ public class Gui extends Application {
                 // cnsume it to not let scrollPane take it
                 e.consume();
                 double delta = e.getDeltaY();
-                float cylOld;
-                cylOld = Float.parseFloat(cyl.getText());
+                float cylOld = Float.parseFloat(cyl.getText());
                 
                 float cylInc= getCylInc(cylOld);
+                // scroll up
                 if(delta > 1){
                     if (cylOld >= 6){
                         return;
                     }
-                    cyl.setText("" + (cylInc + cylOld));
+					float newCyl = cylInc + cylOld;
+                    cyl.setText("" + (newCyl));
+					// change sale 
+					updateCylOfSale(cyl.getParent(), newCyl);
                 }
+                // scroll down
                 else if(delta < -1){
                     if (cylOld <= -6){
                         return;
                     }
-                    cyl.setText("" + ((cylInc*-1) + cylOld));
+					float newCyl = (cylInc*-1) + cylOld;
+                    cyl.setText("" + newCyl);
+					// change sale 
+					updateCylOfSale(cyl.getParent(), newCyl);
                 }
             }
         });
         return cyl;
+    }
+    public void updateCylOfSale(Parent parent,float cyl) {
+       HBox salePane = (HBox) parent; 
+		Sale sale = (Sale) salePane.getProperties().get(0);
+		// update bag and sale
+        sale.editCyl(cyl);
+        salePane.getProperties().replace(0, sale);
+    }
+    public void updateSphereOfSale(Parent parent,float sphere) {
+       HBox salePane = (HBox) parent; 
+		Sale sale = (Sale) salePane.getProperties().get(0);
+		// update bag and sale
+		sale.editSphere(sphere);
+        salePane.getProperties().replace(0, sale);
     }
     public TextField getBagTextField() {
         
@@ -642,6 +735,11 @@ public class Gui extends Application {
                             sphere.setText("20");
                         else if (field < -20)
                             sphere.setText("-20");
+            			else if (!Lens.isSphere(field))
+                    		sphere.setText("0");
+						else {
+							updateSphereOfSale(sphere.getParent(),field); 
+						}
                     } catch (Exception e) {
                         sphere.setText("0");
                     }
@@ -665,13 +763,17 @@ public class Gui extends Application {
                     if (sphereOld >= 20){
                         return;
                     }
-                    sphere.setText("" + (sphereInc + sphereOld));
+					float newSphere = sphereInc + sphereOld;
+                    sphere.setText("" + (newSphere));
+					updateSphereOfSale(sphere.getParent(), newSphere);
                 }
                 else if(delta < -1){
                     if (sphereOld <= -20){
                         return;
                     }
-                    sphere.setText("" + ((sphereInc*-1) + sphereOld));
+					float newSphere = (sphereInc * -1) + sphereOld;
+                    sphere.setText("" + newSphere);
+					updateSphereOfSale(sphere.getParent(), newSphere);
                 }
             }
         });
