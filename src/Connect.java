@@ -75,6 +75,23 @@ public class Connect {
             pstmt.executeUpdate();
         }
     }
+    public void insertCostListCell(Connection conn,int costListId, int sell,int purch) throws Exception{
+
+        String sql = "INSERT INTO CostListCells(list_id, sell, purch) VALUES(?,?,?)";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setInt(1, costListId);
+        pstmt.setInt(2, sell);
+        pstmt.setInt(3, purch);
+        pstmt.executeUpdate();
+    }
+    public void insertCostList(Connection conn, String date ,String name) throws Exception{
+
+        String sql = "INSERT INTO costLists(name, date) VALUES(?,?)";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setString(1, date);
+        pstmt.setString(2, name);
+        pstmt.executeUpdate();
+    }
     public void changeBuyerBalance(int newBalance, int rowId) {
         
     }
@@ -186,7 +203,7 @@ public class Connect {
         String sql = "CREATE TABLE IF NOT EXISTS costLists (\n"
                 + "	list_id integer PRIMARY KEY,\n"
                 + "	name text NOT NULL,\n"
-                + "	date text NOT NULL,\n"
+                + "	date text NOT NULL\n"
                 + ");";
         
         try (Connection conn = connect();
@@ -260,7 +277,7 @@ public class Connect {
             // insert bag
             insertBag(conn, getBuyerId(bag.getBuyer()), getDate());
             // insert all sales
-            final int lastKey = lastInsertKey(conn);
+            final int lastKey = lastInsertBagKey(conn);
             for (int i = 0; i < bag.size(); i++) {
                 Sale sale = bag.getSale(i);
                 insertSale(conn, lastKey, sale);
@@ -270,8 +287,70 @@ public class Connect {
             System.out.println(e);
         }
     }
-    public int lastInsertKey (Connection conn) throws Exception {
+    public void costListToDb(CostList list) {
+        String beginTrans = "BEGIN TRANSACTION;";
+        String endTrans = "COMMIT;";
+        try (Connection conn = this.connect();
+            Statement transaction = conn.createStatement()){
+            // excute transaction
+            transaction.execute(beginTrans);
+            // insert bag
+            insertCostList(conn,getDate(),list.getname());
+            // insert all sales
+            final int lastKey = lastInsertCostListKey(conn);
+            for (int row = 0, col = 0; row < 10; col++) {
+                insertCostListCell(conn, lastKey,list.getSell(row, col) ,list.getPurch(row, col));
+                if (col == 3) {
+                    row++;
+                    col = -1;
+                }
+            }
+            transaction.execute(endTrans);
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+    public void queryCostLists(int id) {
+        String sql = "SELECT * FROM CostLists WHERE list_id = ?;";
+        try (Connection conn = this.connect();
+                PreparedStatement stmt = conn.prepareStatement(sql)){
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                System.out.println(rs.getString(1) + "\t"
+                                    + rs.getString(2) + "\t"
+                                    + rs.getString(3));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+    public void queryCostListCells(int id) {
+        String sql = "SELECT * FROM CostListCells WHERE list_id = ?;";
+        try (Connection conn = this.connect();
+                PreparedStatement stmt = conn.prepareStatement(sql)){
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                System.out.println(rs.getString(1) + "\t"
+                                    + rs.getString(2) + "\t"
+                                    + rs.getString(3));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+    public void dbToCostList(int id) {
+        
+    }
+    public int lastInsertBagKey (Connection conn) throws Exception {
         String sql = "SELECT last_insert_rowid() FROM bags";
+        Statement stmt = conn.createStatement();
+        ResultSet result = stmt.executeQuery(sql);
+        return result.getInt(1);
+    }
+    public int lastInsertCostListKey (Connection conn) throws Exception {
+        String sql = "SELECT last_insert_rowid() FROM costLists";
         Statement stmt = conn.createStatement();
         ResultSet result = stmt.executeQuery(sql);
         return result.getInt(1);
@@ -297,6 +376,40 @@ public class Connect {
             while (rs.next()) {
                 System.out.println(rs.getString(1) + "\t" + rs.getString(2) + "\t" + rs.getString(3));
             }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+    public void queryCostListsTable() {
+        String sql = "SELECT * FROM CostLists;";
+        try (Connection conn = this.connect();
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                System.out.println(rs.getString(1) + "\t"
+                        + rs.getString(2) + "\t"
+                        + rs.getString(3));
+            }
+            System.out.println("\n");
+            
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+    public void queryCostListCellsTable() {
+        
+        String sql = "SELECT * FROM CostListCells;";
+        try (Connection conn = this.connect();
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                System.out.println(rs.getString(1) + "\t"
+                        + rs.getString(2) + "\t"
+                        + rs.getString(3) + "\t"
+                        + rs.getString(4));
+            }
+            System.out.println("\n");
+            
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -352,18 +465,19 @@ public class Connect {
     public static void main(String[] args) {
         Connect te = new Connect();
         // System.out.println(te.lastInsertKey());
-        // te.createBagTable();
-        // te.createSaleTable();
-        // te.createBuyerTable();
-        // te.queryBuyerTable();
-        // te.insertBag(2, te.getDate());
-        // te.insertBuyer("mom");
-        // System.out.println(te.getBuyerId("mom"));
-        // te.getBuyerId("zal");
-        // te.insertSale(2, "bluecut", 3, 3000, "4.25/6.5", "16/20");
+        CostList foo = new CostList("bluecut");
+        foo.editSell(3, 3, 3000);
+        foo.editSell(3, 1, 3000);
+        foo.editSell(3, 2, 3000);
+        foo.editSell(3, 0, 3000);
+        
+        // te.costListToDb(foo);
+        te.queryCostListsTable();
+        te.queryCostListCellsTable();
 
 
-        ArrayList<Bag> foo = new ArrayList<Bag>();
+
+
         Bag test = new Bag("anas");
         Sale saleObject1 = new Sale(new Lens(3, 5, "blue cut"), 6500, 3, "2", "2");
         Sale saleObject2 = new Sale(200, 1, "glasses ");
@@ -373,11 +487,9 @@ public class Connect {
         test.addSale(saleObject3);
         // te.bagToDB(test);
         // te.queryLastBag();
+        // te.createCostListsTable();
         Bag test2 = new Bag("eric");
         Bag test3 = new Bag("john");
-        foo.add(test);
-        foo.add(test2);
-        foo.add(test3);
         for (int i = 0; i < 3; i++) {
             // bagToDB(foo.get(i));
         }

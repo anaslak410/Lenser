@@ -27,7 +27,7 @@ public class CostList {
         sellPrices[row][col] = value;
     }
     public void editPurch(int row, int col, int value) {
-        sellPrices[row][col] = value;
+        purchPrices[row][col] = value;
     }
     public void intArrToCostList(int[] inputArr) {
         if (inputArr.length != 40 ){
@@ -46,7 +46,7 @@ public class CostList {
         return sellPrices[row][col];
     }
     public int getPurch(int row, int col) {
-        return sellPrices[row][col];
+        return purchPrices[row][col];
     }
     public int[] getRowSell(int row) {
         return sellPrices[row];

@@ -486,7 +486,7 @@ public class Gui extends Application {
         
     }
     public int getPosChild(Pane pane,String id) {
-        int[] result = pane.getChildren().filtered(e -> e.idProperty().equals(id)).toArray();
+        // int[] result = pane.getChildren().filtered(e -> e.idProperty().equals(id)).toArray();
 
         return 3;
     }

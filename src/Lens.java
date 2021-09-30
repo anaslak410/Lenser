@@ -108,7 +108,6 @@ public class Lens{
         else
             return false;
     }
-
     public String getSphereCyl() {
         return sphere + "/" + cylinder;
     }
