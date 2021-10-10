@@ -2,6 +2,7 @@ package src;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.lang.reflect.Array;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -310,35 +311,43 @@ public class Connect {
             System.out.println(e);
         }
     }
-    public void queryCostLists(int id) {
-        String sql = "SELECT * FROM CostLists WHERE list_id = ?;";
+    public String queryCostLists(int id , String col) {
+        String sql = "SELECT ? FROM CostLists WHERE list_id = 1;";
         try (Connection conn = this.connect();
                 PreparedStatement stmt = conn.prepareStatement(sql)){
-            stmt.setInt(1, id);
+            stmt.setString(1, col);
+            // stmt.setInt(2, id);
             ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                System.out.println(rs.getString(1) + "\t"
-                                    + rs.getString(2) + "\t"
-                                    + rs.getString(3));
+            System.out.println(rs.getString(1));
+            while (rs.next()){
+                System.out.println(rs.getString(1) + "\t");
             }
+            // return rs.getString(1);
+            return "";
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+            return "";
         }
     }
-    public void queryCostListCells(int id) {
+    public int[] queryCostListCells(int id) {
         String sql = "SELECT * FROM CostListCells WHERE list_id = ?;";
+        
+        int[] sells = new int[40];
         try (Connection conn = this.connect();
                 PreparedStatement stmt = conn.prepareStatement(sql)){
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                System.out.println(rs.getString(1) + "\t"
-                                    + rs.getString(2) + "\t"
-                                    + rs.getString(3));
-            }
+            // Array array = rs.getArray(2);
+            // while(rs.next())
+            //     System.out.println(rs.getString(1) + "\t"
+            //                         + rs.getString(2) + "\t"
+            //                         + rs.getString(3) + "\t"
+            //                         + rs.getString(4));
+            // }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
+        return sells;
     }
     public void dbToCostList(int id) {
         
@@ -449,6 +458,16 @@ public class Connect {
            System.out.println(e.getMessage());
        }
    }
+   public String rsToString(ResultSet set, int numOfCols) throws SQLException {
+       String result = "";
+       while (set.next()) {
+           for (int i = 1; i < numOfCols; i++) {
+               result = result + set.getString(i);
+               System.out.println(set.getString(i) + "\t");
+           }
+       }
+       return result;
+   }
     public String getBuyer(int id) {
         
         String sql = "SELECT name FROM buyers WHERE buyer_id = ?;";
@@ -472,8 +491,11 @@ public class Connect {
         foo.editSell(3, 0, 3000);
         
         // te.costListToDb(foo);
-        te.queryCostListsTable();
-        te.queryCostListCellsTable();
+        System.out.println(te.queryCostLists(1,"date"));
+        // te.queryCostListCellsTable();
+        // te.queryLastBag();
+        // te.queryCostListsTable();
+
 
 
 
