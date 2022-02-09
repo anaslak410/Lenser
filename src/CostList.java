@@ -29,13 +29,26 @@ public class CostList {
     public void editPurch(int row, int col, int value) {
         purchPrices[row][col] = value;
     }
-    public void intArrToCostList(int[] inputArr) {
+    public void sellArrToCostList(int[] inputArr) {
         if (inputArr.length != 40 ){
             System.out.println("incorrect size of arr!!!");
             return;
         }
         for (int row = 0, col = 0, i = 0; row < 10; col++,i++) {
             this.editSell(row, col, inputArr[i]);
+            if (col == 3){
+                row ++;
+                col = -1;
+            }
+        }
+    }
+    public void purchArrToCostList(int[] inputArr) {
+        if (inputArr.length != 40 ){
+            System.out.println("incorrect size of arr!!!");
+            return;
+        }
+        for (int row = 0, col = 0, i = 0; row < 10; col++,i++) {
+            this.editPurch(row, col, inputArr[i]);
             if (col == 3){
                 row ++;
                 col = -1;

@@ -58,6 +58,14 @@
             "mainClass": "src.CreateCostList",
             "projectName": "Lens_66b2e2e6",
             "name": "createCostList"
+      },
+      {
+            "type": "java",
+            "request": "launch",
+            "vmArgs": "--module-path /home/russom/projects/LIBS/javafx-sdk-11.0.2/lib --add-modules javafx.controls,javafx.fxml,javafx.graphics",
+            "mainClass": "src.SaleGui",
+            "projectName": "Lens_66b2e2e6",
+            "name": "SaleGui"
       }
 ]
 }

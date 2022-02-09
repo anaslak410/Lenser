@@ -67,6 +67,7 @@ import javafx.util.Duration;
 public class CreateCostList extends Application {
 
     Stage window;
+    Scene primary;
     CostList costlist;
     GridPane list;
     BorderPane rootPane;
@@ -79,7 +80,7 @@ public class CreateCostList extends Application {
         window.setTitle("Lens");
 
         // load costlist TEST
-        costlist = new CostList("NoName");
+        costlist = new CostList("");
 
         // root node
         rootPane = new BorderPane(getEmptyCostListPane());
@@ -87,13 +88,16 @@ public class CreateCostList extends Application {
         rootPane.setTop(getNamePane());
 
         // scene and stack
-        Scene scene = new Scene(rootPane , 1600 , 1000);
+        primary = new Scene(rootPane , 1600 , 1000);
         String fontSheet = fileToStylesheetString(new File("styles.css"));
-        scene.getStylesheets().add(fontSheet);
-        window.setScene(scene);
+        primary.getStylesheets().add(fontSheet);
+        window.setScene(primary);
         window.show();
         System.out.println("asdf");
 
+    }
+    public Scene getScene() {
+        return primary;
     }
     public HBox getButtonPane() {
         // bottom pane for buttons
@@ -164,6 +168,33 @@ public class CreateCostList extends Application {
         return clearButton;
     }
     public void saveCostList() {
+        // dont save if no name is entered
+        if (costlist.getname().isEmpty()){
+                // no name alert
+                Alert alert = new Alert(AlertType.ERROR,"",ButtonType.OK);
+                alert.titleProperty().set("حدث خطأ");
+                alert.headerTextProperty().set("لم يتم ادخال اسم المجموعة");
+                alert.showAndWait();
+                // abort function 
+                if (alert.getResult() == ButtonType.OK) {
+                    return;
+                }
+        }
+        // create db connection
+        Connect dbCon = new Connect();
+
+        // check if it exists in db
+        if(dbCon.CostListExists(costlist.getname())){
+                // db contains costlist alert
+                Alert alert = new Alert(AlertType.ERROR,"",ButtonType.OK);
+                alert.titleProperty().set("حدث خطأ");
+                alert.headerTextProperty().set("هناك مجموعة بهذا الاسم في المخزن، يرجى ادخال اسم اخر او مسح المجموعة المشابهة");
+                alert.showAndWait();
+                // abort function 
+                if (alert.getResult() == ButtonType.OK) {
+                    return;
+                }
+        }
         // convert textfield texts to int array
         int[] prices = list.getChildren().filtered(e -> e instanceof TextField == true).stream().mapToInt(e -> {
             TextField field = (TextField) e;
@@ -179,9 +210,8 @@ public class CreateCostList extends Application {
         // save name
         HBox namePane = (HBox) rootPane.getTop();
         
-        costlist.intArrToCostList(prices);
-        // System.out.println(Arrays.toString(prices));
-        // System.out.println(prices.length);
+        costlist.sellArrToCostList(prices);
+        dbCon.costListToDb(costlist);
         System.out.println(costlist);
     }
     public GridPane getEmptyCostListPane() {

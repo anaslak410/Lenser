@@ -1,14 +1,15 @@
 # Plan :
 ## Current Issue:
-* bag to database
 * use ids to refer to nodes and not nums
-* have every db return specific query
+* make sales main section
+* translate project terminology to arabic
 ## tasks:
 * [x] add type to sale class and make it appear
 * [x] ability to add sales to bag from diffrent costlists
 * [ ] function that converts price to a fitting string representation
 * [x] manual button, add it to total and make sure its in bag , might need to edit sale.equals()
 * [x] organize project 
+* [ ] change size dependency to id , for example in search in gui
 * [x] make cell addition increment quantity if the same cell is added
     * [x] update clear bag button 
     * [x] update bag AND tested, see if both have the same value
@@ -29,13 +30,6 @@
 * [ ] manual loading must go to a seperate screen to see all available costlists may
 * [ ] material design
 * [ ] database constraints 
-- - - -
-## Version Plan :
-
-### 0.1:
-* Sales section
-
-
 - - - -
 ## Project Terminology:
     Sale: individual unit sold with quantity.

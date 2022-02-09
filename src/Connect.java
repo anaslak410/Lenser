@@ -1,6 +1,7 @@
 package src;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.lang.reflect.Array;
 import java.sql.Connection;
@@ -89,8 +90,8 @@ public class Connect {
 
         String sql = "INSERT INTO costLists(name, date) VALUES(?,?)";
         PreparedStatement pstmt = conn.prepareStatement(sql);
-        pstmt.setString(1, date);
-        pstmt.setString(2, name);
+        pstmt.setString(1, name);
+        pstmt.setString(2, date);
         pstmt.executeUpdate();
     }
     public void changeBuyerBalance(int newBalance, int rowId) {
@@ -175,6 +176,17 @@ public class Connect {
         Date date = new Date();
         return formatter.format(date).toString();
     }
+    public boolean CostListExists(String name) {
+        String sql = "SELECT EXISTS(SELECT name FROM CostLists WHERE name = ?);";
+        try (Connection conn = this.connect();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, name);
+            return stmt.executeQuery().getBoolean(1);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+    }
     public void createSaleTable() {
         
         String sql = "CREATE TABLE IF NOT EXISTS sales (\n"
@@ -203,7 +215,7 @@ public class Connect {
         
         String sql = "CREATE TABLE IF NOT EXISTS costLists (\n"
                 + "	list_id integer PRIMARY KEY,\n"
-                + "	name text NOT NULL,\n"
+                + "	name text NOT NULL UNIQUE,\n"
                 + "	date text NOT NULL\n"
                 + ");";
         
@@ -311,46 +323,62 @@ public class Connect {
             System.out.println(e);
         }
     }
-    public String queryCostLists(int id , String col) {
-        String sql = "SELECT ? FROM CostLists WHERE list_id = 1;";
+    public int getCostListId(String name) {
+        String sql = "SELECT list_id FROM CostLists WHERE name = ?;";
         try (Connection conn = this.connect();
                 PreparedStatement stmt = conn.prepareStatement(sql)){
-            stmt.setString(1, col);
-            // stmt.setInt(2, id);
+            stmt.setString(1, name);
             ResultSet rs = stmt.executeQuery();
-            System.out.println(rs.getString(1));
-            while (rs.next()){
-                System.out.println(rs.getString(1) + "\t");
-            }
-            // return rs.getString(1);
-            return "";
+            return rs.getInt(1);
         } catch (SQLException e) {
             System.out.println(e.getMessage());
-            return "";
+            return -1;
         }
     }
-    public int[] queryCostListCells(int id) {
-        String sql = "SELECT * FROM CostListCells WHERE list_id = ?;";
-        
-        int[] sells = new int[40];
+    public String queryCostLists(int id , String col) {
+        String sql = "SELECT * FROM CostLists WHERE list_id = ?;";
         try (Connection conn = this.connect();
                 PreparedStatement stmt = conn.prepareStatement(sql)){
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
-            // Array array = rs.getArray(2);
-            // while(rs.next())
-            //     System.out.println(rs.getString(1) + "\t"
-            //                         + rs.getString(2) + "\t"
-            //                         + rs.getString(3) + "\t"
-            //                         + rs.getString(4));
-            // }
+            return rs.getString(col);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return "";
+        }
+    }
+    public int[] queryCostListCells(int id, String col) {
+        String sql = "SELECT * FROM CostListCells WHERE list_id = ?;";
+        
+        int[] result = new int[40];
+        try (Connection conn = this.connect();
+                PreparedStatement stmt = conn.prepareStatement(sql)){
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+            for (int i = 0; i <= 40; i++) {
+                // System.out.println(rs.getString(1) + "\t"
+                //                     + rs.getString(2) + "\t"
+                //                     + rs.getString(3) + "\t"
+                //                     + rs.getString(4));
+                rs.next();
+                result[i] = rs.getInt(col);
+            }
+            System.out.println(rs.getArray(1).toString());
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
-        return sells;
+        return result;
     }
-    public void dbToCostList(int id) {
-        
+    public CostList dbToCostList(String name) {
+        int id = getCostListId(name);
+        try {
+            CostList result = new CostList(queryCostLists(id, "name"));
+            result.sellArrToCostList(queryCostListCells(id, "sell"));
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new CostList("NoName");
+        }
     }
     public int lastInsertBagKey (Connection conn) throws Exception {
         String sql = "SELECT last_insert_rowid() FROM bags";
@@ -365,7 +393,7 @@ public class Connect {
         return result.getInt(1);
     }
     public int getBuyerId(String buyer) {
-        String sql = "SELECT buyer_id FROM buyers WHERE name = ?";
+        String sql = "SELECT buyer_id FROM buyers WHERE name = ?;";
         try (Connection conn = this.connect();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1,buyer);
@@ -458,6 +486,21 @@ public class Connect {
            System.out.println(e.getMessage());
        }
    }
+   public ArrayList<String> getCostListNames() {
+        String sql = "SELECT name FROM CostLists;";
+        ArrayList<String> names = new ArrayList<>();
+        try (Connection conn = this.connect();
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                names.add(rs.getString(1));
+            }
+            return names;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return names;
+        }
+   }
    public String rsToString(ResultSet set, int numOfCols) throws SQLException {
        String result = "";
        while (set.next()) {
@@ -489,12 +532,21 @@ public class Connect {
         foo.editSell(3, 1, 3000);
         foo.editSell(3, 2, 3000);
         foo.editSell(3, 0, 3000);
-        
+        System.out.println(te.getCostListNames().contains("cut"));
         // te.costListToDb(foo);
-        System.out.println(te.queryCostLists(1,"date"));
+        // System.out.println(te.queryCostLists(1,"name"));
+        // System.out.println(Arrays.toString(te.queryCostListCells(1, "sell")));
+        // System.out.println(te.dbToCostList("NoName"));
+        // te.createCostListsTable();
+        // te.createCostListCellsTable();
+        // te.queryCostListCellsTable();
+        // te.queryCostListsTable();
+        // te.queryCostListCellsTable();
         // te.queryCostListCellsTable();
         // te.queryLastBag();
         // te.queryCostListsTable();
+        // System.out.println(te.CostListExists("blue cut"));
+        // System.out.println(te.dbToCostList("name"));
 
 
 

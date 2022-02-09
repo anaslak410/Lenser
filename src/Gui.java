@@ -67,6 +67,7 @@ public class Gui extends Application {
     Bag bag;
     CostList costlist;
     Label total;
+    ArrayList<String> listNames;
 
     public static void main(String[] args) {
         launch(args);
@@ -92,6 +93,10 @@ public class Gui extends Application {
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setContent(bagPane);
         scrollPane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
+
+        // load all costlists
+        Connect db = new Connect();
+        listNames = db.getCostListNames();
 
         // root node
         HBox primary = new HBox();
@@ -122,9 +127,7 @@ public class Gui extends Application {
         costlistSearch.setFont(new Font(30));
 
         // load available costLists TESTING ONLY 
-        Map<String,CostList> lists = findCostList();
-        System.out.println(lists);
-        costlistSearch.setOnAction(e -> loadOnsearchAction(e.getSource(),lists));
+        costlistSearch.setOnAction(e -> loadOnsearchAction(e.getSource()));
         // test group
 
         // Label for feedback
@@ -135,49 +138,36 @@ public class Gui extends Application {
         searchPane.getChildren().addAll(searchLabel,costlistSearch,feedbackLabel);
         return searchPane;
     }
-    public Map<String,CostList> findCostList() {
-        // testing purposes only, should be changed when a database is created
-        // load costlists
-        Map<String,CostList> list = new HashMap<>();
-        for (int i = 0; i < 200; i++) {
-            String first = RandomStringUtils.random(4, true, false);
-            String second = RandomStringUtils.random(4, true, false);
-            CostList input = new CostList(first + " " + second);
-            input.editSell(4, 1, RandomUtils.nextInt(1, 50) * 100);
-            input.editSell(2, 3, RandomUtils.nextInt(1, 50) * 100);
-            input.editSell(6, 2, RandomUtils.nextInt(1, 50) * 100);
-            input.editSell(2, 2, RandomUtils.nextInt(1, 50) * 100);
-            input.editSell(6, 2, RandomUtils.nextInt(1, 50) * 100);
-            input.editSell(6, 3, RandomUtils.nextInt(1, 50) * 100);
-            input.editSell(1, 2, RandomUtils.nextInt(1, 50) * 100);
-            input.editSell(0, 0, RandomUtils.nextInt(1, 50) * 100);
-
-            list.put(first.stripLeading() + " " + second.stripLeading(), input);
-        }
-
-        return list;
-    }
-    public CostList loadOnsearchAction(Object e,Map<String,CostList> testMap) {
+    public void loadOnsearchAction(Object e) {
 
         TextField costlistSearch = (TextField) e;
-
-        // finding list
-        CostList loaded = new CostList("none");
-        // to see if it exists
-        boolean found = true;
-        try {
-            loaded = testMap.get(costlistSearch.getText());
-            this.costlist = loaded;
-            lensPane.getChildren().add(getCostList());
-            if (lensPane.getChildren().size() > 2 && found) {
-                // remove old list
-                lensPane.getChildren().remove(1);
-            }
-        } catch (Exception z) {
-            System.out.println("errororror");
-            found = false;
+        // see if name is in costlist names
+        if (!listNames.contains(costlistSearch.getText())) {
+            costlistNotFoundAlert();
+            return;
         }
-        return loaded;
+        // finding list
+        Connect dbCon = new Connect();
+        CostList loaded = dbCon.dbToCostList(costlistSearch.getText());
+        // remove old list if it exists
+        if (lensPane.getChildren().size() > 1) {
+            lensPane.getChildren().remove(1);
+        }
+        // load new list
+        this.costlist = loaded;
+        // add it to pane
+        lensPane.getChildren().add(getCostList());
+    }
+    public void costlistNotFoundAlert() {
+        // db does not contain searched item
+        Alert alert = new Alert(AlertType.ERROR, "", ButtonType.OK);
+        alert.titleProperty().set("حدث خطأ");
+        alert.headerTextProperty().set("ليست هناك مجموعة بهذا الاسم في المخزن، يرجى ادخال اسم اخر");
+        alert.showAndWait();
+        // abort function
+        if (alert.getResult() == ButtonType.OK) {
+            return;
+        }
     }
     public VBox getCostList(){
     // add preexisting list of Costlist
